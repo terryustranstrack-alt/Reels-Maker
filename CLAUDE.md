@@ -91,8 +91,8 @@ Update the "Project status" section below: what was done, what's pending, and an
   - **Render MP4 works for real**: FFmpeg on the PC makes a 1080×1920, 30 fps MP4 with 9:16 centre crop, the hook and captions burned in.
   - Electron Windows app wrapper, plus a GitHub Actions workflow that builds the `.exe` installer.
   - Tested the packaged app end to end on Linux, including a real render.
+  - First Windows installer build on GitHub Actions succeeded (about 174 MB). Not yet tried on a real Windows PC.
 - **Pending / switched off:**
-  - The Windows installer build itself has not been confirmed yet. Check the first GitHub Actions run.
   - Still simulated: transcription, AI hooks and captions (fixed sample content), B-roll, music, zooms, face tracking, credits, sign-in.
   - Project list and credits live in the app's local storage (`src/lib/demo-store`).
   - SocialBooster send is disabled; Brand kit and Account pages are placeholders.
