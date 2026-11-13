@@ -1,0 +1,32 @@
+@import "tailwindcss";
+
+/* Racik Reels colour tokens, taken from the UI/UX mockup (dark theme only). */
+@theme inline {
+  --color-canvas: #191919; /* page background */
+  --color-surface: #212121; /* cards */
+  --color-surface-raised: #2b2b2b; /* inputs, chips, thumbnails */
+  --color-surface-hover: #2f2f2f;
+  --color-line: #3a3a3a; /* borders */
+  --color-line-strong: #474747;
+  --color-ink: #ffffff; /* main text */
+  --color-ink-soft: #d4d4d8;
+  --color-ink-muted: #a1a1aa;
+  --color-brand: #5cd1a4; /* mint accent */
+  --color-brand-deep: #17322a; /* selected-card fill */
+  --color-brand-line: #2e6b55;
+  --color-warn: #ff8a4c; /* processing / B-roll orange */
+  --color-info: #7cc4ff; /* music blue */
+  --color-navy: #1f3a5f; /* Clean Corporate caption chip */
+  --font-sans: var(--font-poppins);
+}
+
+html,
+body {
+  background: var(--color-canvas);
+  color: var(--color-ink);
+}
+
+body {
+  font-family: var(--font-poppins), system-ui, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
