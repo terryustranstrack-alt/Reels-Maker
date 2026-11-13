@@ -14,18 +14,18 @@ export type PipelineStepId =
 export type PipelineStep = {
   id: PipelineStepId;
   label: string; // shown on the "Making your reel" screen
-  weight: number; // rough share of total time, used for the % ring
+  weight: number; // rough share of total time, used for the % ring (speech-to-text is the slow part)
 };
 
 export const GENERATION_PIPELINE_STEPS: PipelineStep[] = [
-  { id: "transcribe", label: "Transcribing speech", weight: 15 },
-  { id: "cleanup", label: "Cutting silences and filler words", weight: 10 },
-  { id: "trim", label: "Picking the strongest moment", weight: 10 },
+  { id: "transcribe", label: "Transcribing speech", weight: 50 },
+  { id: "cleanup", label: "Cutting silences and filler words", weight: 5 },
+  { id: "trim", label: "Picking the strongest moment", weight: 5 },
   { id: "hook", label: "Writing your hook", weight: 10 },
   { id: "reframe", label: "Reframing to 9:16", weight: 15 },
-  { id: "captions", label: "Adding animated captions", weight: 10 },
-  { id: "broll", label: "Finding matching B-roll", weight: 10 },
-  { id: "effects-render", label: "Adding zooms, music and rendering", weight: 20 },
+  { id: "captions", label: "Adding animated captions", weight: 5 },
+  { id: "broll", label: "Finding matching B-roll", weight: 5 },
+  { id: "effects-render", label: "Adding zooms, music and rendering", weight: 10 },
 ];
 
 const TOTAL_WEIGHT = GENERATION_PIPELINE_STEPS.reduce((sum, step) => sum + step.weight, 0);

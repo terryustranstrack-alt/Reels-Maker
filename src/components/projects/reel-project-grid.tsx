@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { ReelProjectCard } from "@/components/projects/reel-project-card";
 import { useDemoState, useGenerationTicker, useIsStoreReady } from "@/lib/demo-store/demo-project-store";
-import { useCurrentTime } from "@/lib/use-current-time";
 
 type ReelProjectGridProps = {
   limit?: number; // show only the newest N (Create screen)
@@ -13,7 +12,6 @@ type ReelProjectGridProps = {
 // Grid of reel cards with live "Processing %" updates.
 export function ReelProjectGrid({ limit, emptyMessage }: ReelProjectGridProps) {
   useGenerationTicker();
-  const now = useCurrentTime(1000);
   const isReady = useIsStoreReady();
   const { projects } = useDemoState();
   const visibleProjects = limit ? projects.slice(0, limit) : projects;
@@ -30,7 +28,7 @@ export function ReelProjectGrid({ limit, emptyMessage }: ReelProjectGridProps) {
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
       {visibleProjects.map((project) => (
-        <ReelProjectCard key={project.id} project={project} now={now} />
+        <ReelProjectCard key={project.id} project={project} />
       ))}
     </div>
   );

@@ -31,6 +31,18 @@ jobs:
 
       - run: npm run lint
 
+      # Whisper program + speech model (~190 MB), kept between builds.
+      - uses: actions/cache@v4
+        with:
+          path: vendor
+          key: whisper-v1.9.5-small-q5_1-windows
+
+      - name: Download Whisper speech recognition
+        run: npm run desktop:download-whisper
+
+      - name: Check Whisper transcribes a sample
+        run: node desktop/check-whisper-transcription.cjs
+
       - name: Build installer
         run: npm run desktop:build-windows -- --publish never
         env:

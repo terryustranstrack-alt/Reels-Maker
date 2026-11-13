@@ -11,6 +11,7 @@ const DATA_DIR = process.env.RACIK_DATA_DIR ?? path.join(process.cwd(), ".local-
 export const SOURCE_VIDEOS_DIR = path.join(DATA_DIR, "source-videos");
 export const RENDERED_REELS_DIR = path.join(DATA_DIR, "rendered-reels");
 export const RENDER_WORK_DIR = path.join(DATA_DIR, "render-work");
+export const GENERATION_RESULTS_DIR = path.join(DATA_DIR, "generation-results");
 
 const FILE_ID_PATTERN = /^[0-9a-f-]{36}(\.[a-z0-9]{2,5})?$/;
 
@@ -20,5 +21,5 @@ export function isSafeFileId(fileId: string): boolean {
 }
 
 export async function ensureDataFolders() {
-  await Promise.all([SOURCE_VIDEOS_DIR, RENDERED_REELS_DIR, RENDER_WORK_DIR].map((dir) => mkdir(dir, { recursive: true })));
+  await Promise.all([SOURCE_VIDEOS_DIR, RENDERED_REELS_DIR, RENDER_WORK_DIR, GENERATION_RESULTS_DIR].map((dir) => mkdir(dir, { recursive: true })));
 }

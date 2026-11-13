@@ -8,7 +8,8 @@ import { UploadedFileSummary } from "@/components/style/uploaded-file-summary";
 import { SparkleIcon } from "@/components/ui/app-icons";
 import { ChoiceChip } from "@/components/ui/choice-chip";
 import { ToggleSwitch } from "@/components/ui/toggle-switch";
-import { getPendingUpload, startGeneration } from "@/lib/demo-store/demo-project-store";
+import { getPendingUpload, markGenerationFailed, startGeneration } from "@/lib/demo-store/demo-project-store";
+import { startLocalGeneration } from "@/lib/local-generation/generation-client";
 import {
   DEFAULT_REEL_STYLE,
   HOOK_STYLE_OPTIONS,
@@ -25,6 +26,7 @@ export function ReelStyleForm() {
   const [upload] = useState(getPendingUpload);
   const [style, setStyle] = useState<ReelStyleSettings>(DEFAULT_REEL_STYLE);
   const [error, setError] = useState<string | null>(null);
+  const [isStarting, setIsStarting] = useState(false);
 
   // The chosen file only lives in memory, so a page refresh loses it.
   if (!upload) {
@@ -42,10 +44,18 @@ export function ReelStyleForm() {
     setStyle((current) => ({ ...current, [key]: value }));
   }
 
-  function handleGenerate() {
+  /** Charges credits, then asks the PC to start transcribing and building the draft. */
+  async function handleGenerate() {
     const result = startGeneration(upload!, style);
     if (!result.ok) return setError(result.error);
-    router.push(`/projects/${result.projectId}/generating`);
+    setIsStarting(true);
+    const startError = await startLocalGeneration(result.project);
+    if (startError) {
+      markGenerationFailed(result.project.id, startError); // gives the credits back
+      setIsStarting(false);
+      return setError(startError);
+    }
+    router.push(`/projects/${result.project.id}/generating`);
   }
 
   const cost = creditCostForLength(style.lengthSeconds);
@@ -118,6 +128,7 @@ export function ReelStyleForm() {
           <button
             type="button"
             onClick={handleGenerate}
+            disabled={isStarting}
             className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand py-4 text-base font-semibold text-canvas"
           >
             <SparkleIcon size={18} />

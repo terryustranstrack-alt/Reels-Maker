@@ -9,7 +9,8 @@
     "lint": "eslint",
     "desktop:prepare": "next build && node desktop/prepare-desktop-server.cjs",
     "desktop:start": "npm run desktop:prepare && electron .",
-    "desktop:build-windows": "npm run desktop:prepare && electron-builder --config desktop/electron-builder.yml --win"
+    "desktop:build-windows": "npm run desktop:prepare && electron-builder --config desktop/electron-builder.yml --win",
+    "desktop:download-whisper": "node desktop/download-whisper-tools.cjs"
   },
   "dependencies": {
     "ffmpeg-static": "^5.3.0",

@@ -7,7 +7,7 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ["ffmpeg-static"],
   // Never copy local test videos or project files into the Windows app.
   outputFileTracingExcludes: {
-    "*": [".local-data/**", "src/**", "context/**", "supabase/**", "dist-desktop/**", "desktop/**"],
+    "*": [".local-data/**", "vendor/**", "src/**", "context/**", "supabase/**", "dist-desktop/**", "desktop/**"],
   },
   cacheComponents: true,
   partialPrefetching: true,

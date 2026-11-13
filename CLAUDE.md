@@ -75,6 +75,8 @@ Update the "Project status" section below: what was done, what's pending, and an
   - `src/app/` — pages, one folder per screen; `src/app/api/local/` — save videos and render on the PC
   - `src/components/` — screen pieces grouped by screen
   - `src/lib/local-files/`, `src/lib/local-render/` — disk storage, FFmpeg render, caption subtitles
+  - `src/lib/local-transcription/`, `src/lib/local-generation/` — Whisper speech-to-text, building the draft
+  - `vendor/` — Whisper program + model (downloaded, not in git)
   - `src/lib/demo-store/` — project list and credits kept in the app (to move online later)
   - `desktop/` — Electron window and installer settings
   - `supabase/migrations/` — database changes for the online part
@@ -91,13 +93,17 @@ Update the "Project status" section below: what was done, what's pending, and an
   - **Render MP4 works for real**: FFmpeg on the PC makes a 1080×1920, 30 fps MP4 with 9:16 centre crop, the hook and captions burned in.
   - Electron Windows app wrapper, plus a GitHub Actions workflow that builds the `.exe` installer.
   - Tested the packaged app end to end on Linux, including a real render.
-  - First Windows installer build on GitHub Actions succeeded (about 174 MB). Not yet tried on a real Windows PC.
+  - First Windows installer build on GitHub Actions succeeded (about 174 MB); tested by the owner on Windows, render with captions works.
+  - **Real transcription**: Whisper ("small" model) runs on the PC and turns the video's speech into captions with real timings. "Making your reel" shows real progress; failures show a message and refund the credit.
+  - The installer build now downloads Whisper and checks it transcribes a sample before building.
 - **Pending / switched off:**
-  - Still simulated: transcription, AI hooks and captions (fixed sample content), B-roll, music, zooms, face tracking, credits, sign-in.
+  - Simple rules instead of AI (until the online Claude service): hook options are the speaker's own sentences, highlight = longest meaningful word, post caption = first two sentences.
+  - Not built: silence/filler cutting, face tracking, B-roll, music, zooms, credits, sign-in.
+  - Real Whisper has only been run on GitHub's Windows build machine, not yet on the owner's PC with Bahasa speech.
   - Project list and credits live in the app's local storage (`src/lib/demo-store`).
   - SocialBooster send is disabled; Brand kit and Account pages are placeholders.
   - The installer is unsigned, so Windows SmartScreen warns "unknown publisher".
 - **Needs action from me:**
-  - Download the installer from GitHub Actions and try it on a Windows PC.
+  - Download the new installer (about 360 MB now, includes Whisper) and try it with a real Bahasa talking video.
   - Before public launch: buy a code-signing certificate.
   - For the online part: create a Supabase project and an Anthropic API key (names in `.env.example`).

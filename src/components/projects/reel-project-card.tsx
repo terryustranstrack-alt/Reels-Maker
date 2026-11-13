@@ -1,14 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { demoProgressPercent } from "@/lib/demo-store/demo-project-store";
+import { generationProgressPercent } from "@/lib/demo-store/demo-project-store";
 import { activeHookText, type ReelProject } from "@/lib/reel-project-types";
 
 // One reel in the "Recent reels" grid and the Projects library (PRD F18).
-export function ReelProjectCard({ project, now }: { project: ReelProject; now: number }) {
-  const href =
-    project.status === "processing" ? `/projects/${project.id}/generating` : `/projects/${project.id}/review`;
-  const progress = project.status === "processing" ? demoProgressPercent(project, now) : 100;
+export function ReelProjectCard({ project }: { project: ReelProject }) {
+  const showsProgressScreen = project.status === "processing" || project.status === "failed";
+  const href = `/projects/${project.id}/${showsProgressScreen ? "generating" : "review"}`;
+  const progress = generationProgressPercent(project);
 
   return (
     <Link href={href} className="block">

@@ -24,6 +24,11 @@ extraResources:
     to: server/node_modules
     filter:
       - "**/*"
+  # Whisper speech recognition (downloaded by `npm run desktop:download-whisper`).
+  - from: vendor/whisper
+    to: whisper
+  - from: vendor/whisper-models
+    to: whisper-models
 
 win:
   target:

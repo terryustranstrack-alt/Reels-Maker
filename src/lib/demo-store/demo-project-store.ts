@@ -5,8 +5,8 @@
 // Sign-in, credits and AI move to the online service later (see supabase/migrations).
 
 import { useEffect, useSyncExternalStore } from "react";
-import { buildDemoDraft } from "@/lib/demo-store/demo-draft-builder";
-import { GENERATION_PIPELINE_STEPS, overallProgressPercent } from "@/lib/reel-options/generation-pipeline-steps";
+import { type GenerationStatus, fetchGenerationStatus } from "@/lib/local-generation/generation-client";
+import { overallProgressPercent } from "@/lib/reel-options/generation-pipeline-steps";
 import {
   creditCostForLength,
   type CaptionStyleId,
@@ -17,8 +17,7 @@ import type { ReelDraft, ReelProject } from "@/lib/reel-project-types";
 const STORAGE_KEY = "racik-reels-demo-v1";
 const STARTING_DEMO_CREDITS = 12;
 const FREE_REGENERATIONS_PER_REEL = 2;
-/** How long a fake generation takes in demo mode. */
-export const DEMO_GENERATION_MS = 20_000;
+const PROGRESS_CHECK_MS = 1500;
 
 type DemoState = { credits: number; projects: ReelProject[] };
 
@@ -82,11 +81,11 @@ export function useDemoProject(projectId: string): ReelProject | undefined {
   return useDemoState().projects.find((project) => project.id === projectId);
 }
 
-/** Moves finished demo generations to "Ready" while a page that shows them is open. */
+/** While a page that shows reels is open, asks the PC how each reel in progress is doing. */
 export function useGenerationTicker() {
   useEffect(() => {
-    settleFinishedGenerations();
-    const timer = window.setInterval(settleFinishedGenerations, 1000);
+    checkGenerationsInProgress();
+    const timer = window.setInterval(checkGenerationsInProgress, PROGRESS_CHECK_MS);
     return () => window.clearInterval(timer);
   }, []);
 }
@@ -112,9 +111,9 @@ export function sourceVideoUrl(project: ReelProject): string | null {
 
 // ---------- Actions ----------
 
-type StartResult = { ok: true; projectId: string } | { ok: false; error: string };
+type StartResult = { ok: true; project: ReelProject } | { ok: false; error: string };
 
-/** Hard credit check, then charge credits and start a (fake) generation. */
+/** Hard credit check, then charge credits and add the reel as "Processing". The caller starts the PC job. */
 export function startGeneration(upload: PendingUpload, style: ReelStyleSettings): StartResult {
   const state = getState();
   const cost = creditCostForLength(style.lengthSeconds);
@@ -141,41 +140,56 @@ export function startGeneration(upload: PendingUpload, style: ReelStyleSettings)
 
   pendingUpload = null;
   setState({ credits: state.credits - cost, projects: [project, ...state.projects] });
-  return { ok: true, projectId };
+  return { ok: true, project };
 }
 
-/** Marks every fake generation whose time is up as Ready, with a sample draft. */
-export function settleFinishedGenerations() {
-  const state = getState();
-  const now = Date.now();
-  const finished = state.projects.filter(
-    (project) => project.status === "processing" && now - project.generationStartedAt >= DEMO_GENERATION_MS,
+/** Overall progress of a reel being made, 0–100. */
+export function generationProgressPercent(project: ReelProject): number {
+  if (project.status !== "processing") return 100;
+  return overallProgressPercent(project.completedSteps ?? 0, project.currentStepShare ?? 0);
+}
+
+/** Asks the PC about every reel still processing and saves what it says. */
+async function checkGenerationsInProgress() {
+  const processing = getState().projects.filter((project) => project.status === "processing");
+  await Promise.all(
+    processing.map(async (project) => {
+      const status = await fetchGenerationStatus(project.id);
+      if (status) applyGenerationStatus(project.id, status);
+    }),
   );
-  if (finished.length === 0) return;
+}
 
+function applyGenerationStatus(projectId: string, status: GenerationStatus) {
+  if (status.status === "running") {
+    updateProject(projectId, (project) => ({
+      ...project,
+      completedSteps: status.completedSteps,
+      currentStepShare: status.currentStepShare,
+    }));
+  } else if (status.status === "done" && status.draft) {
+    const { draft, usedSampleContent } = status;
+    updateProject(projectId, (project) => ({ ...project, status: "ready", draft, usedSampleContent }));
+  } else {
+    const message =
+      status.status === "failed"
+        ? (status.errorMessage ?? "We couldn't make this reel.")
+        : status.status === "missing"
+          ? "The app was closed while this reel was being made."
+          : "We couldn't make this reel."; // "done" without a draft
+    markGenerationFailed(projectId, message);
+  }
+}
+
+/** Marks a reel as Failed and gives its credits back. */
+export function markGenerationFailed(projectId: string, failureMessage: string) {
+  const state = getState();
+  const project = state.projects.find((item) => item.id === projectId);
+  if (!project || project.status !== "processing") return;
   setState({
-    ...state,
-    projects: state.projects.map((project) =>
-      finished.includes(project)
-        ? { ...project, status: "ready", draft: project.draft ?? buildDemoDraft(project.style, project.sourceDurationSeconds) }
-        : project,
-    ),
+    credits: state.credits + project.creditsCharged,
+    projects: state.projects.map((item) => (item.id === projectId ? { ...item, status: "failed", failureMessage } : item)),
   });
-}
-
-/** Demo progress: how many steps are done and how far into the current one (0–1). */
-export function demoGenerationProgress(project: ReelProject, now: number) {
-  const stepCount = GENERATION_PIPELINE_STEPS.length;
-  const share = Math.min(1, (now - project.generationStartedAt) / DEMO_GENERATION_MS);
-  const exactStep = share * stepCount;
-  const completedSteps = Math.min(stepCount, Math.floor(exactStep));
-  return { completedSteps, currentStepShare: exactStep - completedSteps, remainingMs: DEMO_GENERATION_MS * (1 - share) };
-}
-
-/** Demo progress as a single 0–100 number. */
-export function demoProgressPercent(project: ReelProject, now: number): number {
-  const { completedSteps, currentStepShare } = demoGenerationProgress(project, now);
-  return overallProgressPercent(completedSteps, currentStepShare);
 }
 
 export function updateDraft(projectId: string, change: (draft: ReelDraft) => ReelDraft) {

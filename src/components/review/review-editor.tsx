@@ -97,6 +97,7 @@ function ReviewEditorLayout({ project, draft }: { project: ReelProject; draft: R
         />
         {preview}
         {!sourceVideoUrl && <SourceVideoNote />}
+        {project.usedSampleContent && <SampleContentNote />}
         <div className="mt-6 flex overflow-x-auto border-b border-line [scrollbar-width:none]">
           {EDIT_TABS.map((tab) => (
             <button
@@ -138,6 +139,8 @@ function ReviewEditorLayout({ project, draft }: { project: ReelProject; draft: R
           <section className="flex flex-col gap-5 px-6 py-6">
             {preview}
             {!sourceVideoUrl && <SourceVideoNote />}
+            {project.usedSampleContent && <SampleContentNote />}
+        {project.usedSampleContent && <SampleContentNote />}
             <ReviewTimeline draft={draft} currentTime={currentTime} onSeek={seekTo} />
           </section>
           <aside className="border-l border-line px-5 py-6">
@@ -207,6 +210,15 @@ function SourceVideoNote() {
   return (
     <p className="mt-2 text-center text-xs text-ink-muted">
       Preview without video: the original file for this reel wasn&apos;t saved.
+    </p>
+  );
+}
+
+/** Whisper wasn't found on this PC, so the captions are sample text, not the real speech. */
+function SampleContentNote() {
+  return (
+    <p className="mt-2 text-center text-xs text-warn">
+      Speech recognition isn&apos;t installed on this PC, so these are sample captions.
     </p>
   );
 }

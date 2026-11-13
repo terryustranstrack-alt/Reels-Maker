@@ -55,6 +55,11 @@ export type ReelProject = {
   generationStartedAt: number;
   regenerationsUsed: number; // style regenerations, free up to 2 (PRD: Pricing)
   draft: ReelDraft | null;
+  // While "processing": progress reported by the PC's generation job.
+  completedSteps?: number;
+  currentStepShare?: number;
+  failureMessage?: string | null;
+  usedSampleContent?: boolean; // Whisper not installed → sample captions were used
 };
 
 /** The hook text currently shown in the first 3 seconds. */

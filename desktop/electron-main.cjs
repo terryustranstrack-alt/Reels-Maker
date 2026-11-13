@@ -28,6 +28,21 @@ function ffmpegPath() {
   return path.join(serverFolder(), "node_modules", "ffmpeg-static", fileName);
 }
 
+/** Whisper (speech to text): bundled in the installed app, or in ./vendor while developing. */
+function whisperFolder(subfolder) {
+  return app.isPackaged
+    ? path.join(process.resourcesPath, subfolder)
+    : path.join(__dirname, "..", "vendor", subfolder);
+}
+
+function whisperProgramPath() {
+  return path.join(whisperFolder("whisper"), process.platform === "win32" ? "whisper-cli.exe" : "whisper-cli");
+}
+
+function whisperModelPath() {
+  return path.join(whisperFolder("whisper-models"), "ggml-small-q5_1.bin");
+}
+
 // ---------- Local server ----------
 
 /** Runs the bundled Next.js server with Electron's built-in Node.js. */
@@ -45,6 +60,8 @@ function startLocalServer() {
       RACIK_DATA_DIR: path.join(app.getPath("userData"), "reels-data"),
       RACIK_FFMPEG_PATH: ffmpegPath(),
       RACIK_FONTS_DIR: path.join(folder, "assets", "fonts"),
+      RACIK_WHISPER_PATH: whisperProgramPath(),
+      RACIK_WHISPER_MODEL: whisperModelPath(),
     },
   });
   serverProcess.stdout.on("data", (chunk) => console.log(`[server] ${chunk}`));
