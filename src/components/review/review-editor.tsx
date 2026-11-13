@@ -98,6 +98,7 @@ function ReviewEditorLayout({ project, draft }: { project: ReelProject; draft: R
         {preview}
         {!sourceVideoUrl && <SourceVideoNote />}
         {project.usedSampleContent && <SampleContentNote />}
+        {project.aiNote && <AiNote message={project.aiNote} />}
         <div className="mt-6 flex overflow-x-auto border-b border-line [scrollbar-width:none]">
           {EDIT_TABS.map((tab) => (
             <button
@@ -140,7 +141,7 @@ function ReviewEditorLayout({ project, draft }: { project: ReelProject; draft: R
             {preview}
             {!sourceVideoUrl && <SourceVideoNote />}
             {project.usedSampleContent && <SampleContentNote />}
-        {project.usedSampleContent && <SampleContentNote />}
+            {project.aiNote && <AiNote message={project.aiNote} />}
             <ReviewTimeline draft={draft} currentTime={currentTime} onSeek={seekTo} />
           </section>
           <aside className="border-l border-line px-5 py-6">
@@ -221,4 +222,9 @@ function SampleContentNote() {
       Speech recognition isn&apos;t installed on this PC, so these are sample captions.
     </p>
   );
+}
+
+/** Explains why the hooks came from simple rules instead of the AI (not set up, or the service failed). */
+function AiNote({ message }: { message: string }) {
+  return <p className="mt-2 text-center text-xs text-ink-muted">{message}</p>;
 }

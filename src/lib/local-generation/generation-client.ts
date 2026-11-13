@@ -6,7 +6,7 @@ import type { ReelDraft, ReelProject } from "@/lib/reel-project-types";
 
 export type GenerationStatus =
   | { status: "running"; completedSteps: number; currentStepShare: number }
-  | { status: "done"; draft: ReelDraft | null; usedSampleContent: boolean }
+  | { status: "done"; draft: ReelDraft | null; usedSampleContent: boolean; aiNote?: string | null }
   | { status: "failed"; errorMessage: string | null }
   | { status: "missing" }; // the PC has no record of it (app closed mid-way)
 

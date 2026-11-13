@@ -70,9 +70,13 @@ function BrollMarker({ keyword, layout }: { keyword: string; layout: string }) {
   );
 }
 
-/** Keeps the <video> element in step with the play/pause state and reports its time. */
+/**
+ * Keeps the <video> element in step with the play/pause state and reports its time.
+ * Reel time 0 = `sourceStartSeconds` in the original video (the moment the AI picked).
+ */
 function useVideoSync({ sourceVideoUrl, isPlaying, currentTime, draft, onTimeChange, onPlayingChange }: ReelPreviewPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const offset = draft.sourceStartSeconds ?? 0;
 
   useEffect(() => {
     const video = videoRef.current;
@@ -84,22 +88,23 @@ function useVideoSync({ sourceVideoUrl, isPlaying, currentTime, draft, onTimeCha
   // Seek when the time is changed from outside (e.g. clicking the timeline).
   useEffect(() => {
     const video = videoRef.current;
-    if (video && Math.abs(video.currentTime - currentTime) > 0.4) video.currentTime = currentTime;
-  }, [currentTime]);
+    if (video && Math.abs(video.currentTime - offset - currentTime) > 0.4) video.currentTime = offset + currentTime;
+  }, [currentTime, offset]);
 
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
     const handleTime = () => {
-      if (video.currentTime >= draft.durationSeconds) {
+      const reelTime = video.currentTime - offset;
+      if (reelTime >= draft.durationSeconds) {
         video.pause();
         onPlayingChange(false);
         onTimeChange(0);
-      } else onTimeChange(video.currentTime);
+      } else onTimeChange(Math.max(0, reelTime));
     };
     video.addEventListener("timeupdate", handleTime);
     return () => video.removeEventListener("timeupdate", handleTime);
-  }, [sourceVideoUrl, draft.durationSeconds, onTimeChange, onPlayingChange]);
+  }, [sourceVideoUrl, draft.durationSeconds, offset, onTimeChange, onPlayingChange]);
 
   return videoRef;
 }

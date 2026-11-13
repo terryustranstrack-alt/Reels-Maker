@@ -11,7 +11,7 @@ import type { CaptionStyleId } from "@/lib/reel-options/reel-style-options";
 import type { ReelDraft } from "@/lib/reel-project-types";
 
 // Renders the final 1080×1920, 30 fps MP4 on this PC with FFmpeg (PRD F16).
-// Covered now: 9:16 centre crop, trim to reel length, hook + captions burned in.
+// Covered now: 9:16 centre crop, the AI-chosen moment trimmed to reel length, hook + captions burned in.
 // Not yet: face tracking, B-roll, music, zooms (need the pipeline steps that come later).
 
 type RenderInput = { sourceVideoId: string; draft: ReelDraft; captionStyle: CaptionStyleId };
@@ -25,6 +25,8 @@ export async function renderReelVideo({ sourceVideoId, draft, captionStyle }: Re
     await prepareWorkFolder(workDir, buildReelSubtitles(draft, captionStyle));
     await runFfmpeg(workDir, [
       "-y",
+      // Start at the moment the AI picked (0 if none); placed before -i for a fast, exact seek.
+      "-ss", String(draft.sourceStartSeconds ?? 0),
       "-i", path.join(SOURCE_VIDEOS_DIR, sourceVideoId),
       "-t", String(draft.durationSeconds),
       // Fill the 9:16 frame, crop the middle, then burn in the subtitles.

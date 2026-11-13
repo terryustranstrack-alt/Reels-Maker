@@ -55,9 +55,11 @@ export function GenerationProgressView() {
   );
 }
 
-/** Listening to the speech is the slow part; everything after it is quick. */
+/** Listening to the speech is the slow part, then the AI plans the reel online. */
 function progressCaption(completedSteps: number): string {
-  return completedSteps === 0 ? "listening to your video…" : "almost done";
+  if (completedSteps === 0) return "listening to your video…";
+  if (completedSteps === 1) return "AI is planning your reel…";
+  return "almost done";
 }
 
 /** Shown when the PC couldn't make the reel. Credits have already been given back. */

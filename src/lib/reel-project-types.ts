@@ -29,6 +29,7 @@ export type ReelEffects = {
 
 export type ReelDraft = {
   durationSeconds: number;
+  sourceStartSeconds?: number; // where the reel starts in the original video (AI-chosen moment); 0 if missing
   hookOptions: string[]; // 3 AI hooks (PRD F5)
   selectedHookIndex: number; // -1 means the custom hook is used
   customHook: string;
@@ -60,6 +61,7 @@ export type ReelProject = {
   currentStepShare?: number;
   failureMessage?: string | null;
   usedSampleContent?: boolean; // Whisper not installed → sample captions were used
+  aiNote?: string | null; // why Claude's edit plan wasn't used (not set up / failed), shown on Review
 };
 
 /** The hook text currently shown in the first 3 seconds. */

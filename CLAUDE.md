@@ -77,6 +77,9 @@ Update the "Project status" section below: what was done, what's pending, and an
   - `src/lib/local-files/`, `src/lib/local-render/` — disk storage, FFmpeg render, caption subtitles
   - `src/lib/local-transcription/`, `src/lib/local-generation/` — Whisper speech-to-text, building the draft
   - `vendor/` — Whisper program + model (downloaded, not in git)
+  - `src/lib/cloud-ai/`, `src/app/api/cloud/` — online AI service (Vercel): Claude edit plan, access code
+  - `src/lib/local-ai/` — app side: AI settings (Account page) and calling the service
+  - `src/proxy.ts` — on Vercel, hides everything except `/api/cloud/*`
   - `src/lib/demo-store/` — project list and credits kept in the app (to move online later)
   - `desktop/` — Electron window and installer settings
   - `supabase/migrations/` — database changes for the online part
@@ -95,16 +98,20 @@ Update the "Project status" section below: what was done, what's pending, and an
   - Tested the packaged app end to end on Linux, including a real render.
   - First Windows installer build on GitHub Actions succeeded (about 174 MB); tested by the owner on Windows, render with captions works.
   - **Real transcription**: Whisper ("small" model) runs on the PC and turns the video's speech into captions with real timings. "Making your reel" shows real progress; failures show a message and refund the credit.
+  - Owner tested on Windows: install works (after a Retry in the installer), speech recognition works.
+  - Fixed: the hidden local server now always stops with the app, even after a crash (it blocked reinstalling).
+  - **Claude AI edit plan (internal alpha)**: online service on Vercel (`/api/cloud/edit-plan`, protected by an access code) returns 3 hooks, the best moment (reel starts there), highlight keywords, post caption and hashtags. Set up on the app's Account page. Falls back to simple rules with a note on Review. Tested with a stand-in service; real Claude not yet called.
   - The installer build downloads the newest whisper.cpp Windows release (only whisper-cli.exe + DLLs) and checks it transcribes a sample before building. First passing build: 22-word English sample in 9.1 s; installer ~360 MB.
 - **Pending / switched off:**
-  - Simple rules instead of AI (until the online Claude service): hook options are the speaker's own sentences, highlight = longest meaningful word, post caption = first two sentences.
+  - The online AI service isn't deployed yet (owner to create the Vercel project + keys).
+  - AI model: Claude Opus 5.5 at medium effort (about Rp 1,000–1,500 per reel); can switch to Sonnet 5.5 to save cost.
+  - B-roll keywords from the AI are not used yet (no stock footage step).
   - Not built: silence/filler cutting, face tracking, B-roll, music, zooms, credits, sign-in.
-  - Real Whisper has only been run on GitHub's Windows build machine, not yet on the owner's PC with Bahasa speech.
-  - Fixed: the hidden local server could stay running after closing the app, which blocked reinstalling ("Racik Reels cannot be closed"). It now always stops with the app, even after a crash.
   - Project list and credits live in the app's local storage (`src/lib/demo-store`).
   - SocialBooster send is disabled; Brand kit and Account pages are placeholders.
   - The installer is unsigned, so Windows SmartScreen warns "unknown publisher".
 - **Needs action from me:**
+  - Create an Anthropic API key, deploy this repo on Vercel with `ANTHROPIC_API_KEY` + `RACIK_ALPHA_ACCESS_CODE`, then enter the Vercel address + code on the app's Account page.
   - Download the new installer (about 360 MB now, includes Whisper) and try it with a real Bahasa talking video.
   - Before public launch: buy a code-signing certificate.
   - For the online part: create a Supabase project and an Anthropic API key (names in `.env.example`).
