@@ -35,7 +35,7 @@ jobs:
       - uses: actions/cache@v5
         with:
           path: vendor
-          key: whisper-windows-latest-small-q5_1-v2
+          key: whisper-windows-latest-small-q5_1-v3
 
       - name: Download Whisper speech recognition
         run: npm run desktop:download-whisper

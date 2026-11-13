@@ -47,7 +47,7 @@ async function ensureModel() {
   fs.renameSync(`${modelPath}.part`, modelPath); // only a complete file gets the real name
 }
 
-/** The official Windows zip holds whisper-cli.exe plus the DLL files it needs; copy that whole folder. */
+/** The official Windows zip holds many tools; keep only whisper-cli.exe and the DLL files it needs. */
 async function ensureWindowsProgram() {
   if (fs.existsSync(path.join(programDir, "whisper-cli.exe"))) return console.log("Whisper program already downloaded.");
   const zipPath = path.join(tempDir, "whisper-bin-x64.zip");
@@ -59,7 +59,9 @@ async function ensureWindowsProgram() {
   const programPath = findFile(extractDir, "whisper-cli.exe");
   if (!programPath) throw new Error("whisper-cli.exe was not found in the downloaded zip.");
   fs.mkdirSync(programDir, { recursive: true });
-  fs.cpSync(path.dirname(programPath), programDir, { recursive: true });
+  const sourceDir = path.dirname(programPath);
+  const neededFiles = fs.readdirSync(sourceDir).filter((name) => name === "whisper-cli.exe" || name.toLowerCase().endsWith(".dll"));
+  for (const name of neededFiles) fs.copyFileSync(path.join(sourceDir, name), path.join(programDir, name));
   fs.rmSync(tempDir, { recursive: true, force: true });
 }
 

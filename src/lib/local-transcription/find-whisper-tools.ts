@@ -16,5 +16,7 @@ export function findWhisperTools(): WhisperTools | null {
   const programPath = process.env.RACIK_WHISPER_PATH || path.join(process.cwd(), "vendor", "whisper", programName);
   const modelPath =
     process.env.RACIK_WHISPER_MODEL || path.join(process.cwd(), "vendor", "whisper-models", WHISPER_MODEL_FILE);
-  return existsSync(programPath) && existsSync(modelPath) ? { programPath, modelPath } : null;
+  // turbopackIgnore: these paths are only known at run time; don't copy the whole project into the build.
+  const found = existsSync(/*turbopackIgnore: true*/ programPath) && existsSync(/*turbopackIgnore: true*/ modelPath);
+  return found ? { programPath, modelPath } : null;
 }

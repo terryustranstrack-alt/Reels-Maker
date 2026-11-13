@@ -95,7 +95,7 @@ Update the "Project status" section below: what was done, what's pending, and an
   - Tested the packaged app end to end on Linux, including a real render.
   - First Windows installer build on GitHub Actions succeeded (about 174 MB); tested by the owner on Windows, render with captions works.
   - **Real transcription**: Whisper ("small" model) runs on the PC and turns the video's speech into captions with real timings. "Making your reel" shows real progress; failures show a message and refund the credit.
-  - The installer build now downloads Whisper and checks it transcribes a sample before building.
+  - The installer build downloads the newest whisper.cpp Windows release (only whisper-cli.exe + DLLs) and checks it transcribes a sample before building. First passing build: 22-word English sample in 9.1 s; installer ~360 MB.
 - **Pending / switched off:**
   - Simple rules instead of AI (until the online Claude service): hook options are the speaker's own sentences, highlight = longest meaningful word, post caption = first two sentences.
   - Not built: silence/filler cutting, face tracking, B-roll, music, zooms, credits, sign-in.
