@@ -3,7 +3,7 @@
 // Videos are saved and rendered on this PC; nothing is uploaded.
 
 const { app, BrowserWindow, shell, dialog } = require("electron");
-const { spawn } = require("node:child_process");
+const { spawn, spawnSync } = require("node:child_process");
 const http = require("node:http");
 const path = require("node:path");
 
@@ -48,12 +48,14 @@ function whisperModelPath() {
 /** Runs the bundled Next.js server with Electron's built-in Node.js. */
 function startLocalServer() {
   const folder = serverFolder();
-  serverProcess = spawn(process.execPath, [path.join(folder, "server.js")], {
+  // The launcher stops the server by itself if this app process disappears (crash, force close).
+  serverProcess = spawn(process.execPath, [path.join(folder, "local-server-launcher.cjs")], {
     cwd: folder,
     windowsHide: true,
     env: {
       ...process.env,
       ELECTRON_RUN_AS_NODE: "1",
+      RACIK_PARENT_PID: String(process.pid),
       NODE_ENV: "production",
       PORT: String(LOCAL_PORT),
       HOSTNAME: "127.0.0.1", // only this PC can reach it
@@ -120,6 +122,16 @@ function createMainWindow() {
   return mainWindow;
 }
 
+/** Stops the local server and anything it started (FFmpeg, Whisper). On Windows a plain kill misses those. */
+function stopLocalServer() {
+  if (!serverProcess || serverProcess.exitCode !== null) return;
+  if (process.platform === "win32") {
+    spawnSync("taskkill", ["/pid", String(serverProcess.pid), "/T", "/F"], { windowsHide: true });
+  } else {
+    serverProcess.kill();
+  }
+}
+
 function showStartupError(message) {
   dialog.showErrorBox("Racik Reels couldn't start", `${message}\n\nPlease close the app and open it again.`);
 }
@@ -151,7 +163,8 @@ if (!app.requestSingleInstanceLock()) {
 
   app.on("before-quit", () => {
     app.isQuitting = true;
-    if (serverProcess) serverProcess.kill();
+    stopLocalServer();
   });
+  process.on("exit", stopLocalServer);
   app.on("window-all-closed", () => app.quit());
 }

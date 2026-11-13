@@ -100,6 +100,7 @@ Update the "Project status" section below: what was done, what's pending, and an
   - Simple rules instead of AI (until the online Claude service): hook options are the speaker's own sentences, highlight = longest meaningful word, post caption = first two sentences.
   - Not built: silence/filler cutting, face tracking, B-roll, music, zooms, credits, sign-in.
   - Real Whisper has only been run on GitHub's Windows build machine, not yet on the owner's PC with Bahasa speech.
+  - Fixed: the hidden local server could stay running after closing the app, which blocked reinstalling ("Racik Reels cannot be closed"). It now always stops with the app, even after a crash.
   - Project list and credits live in the app's local storage (`src/lib/demo-store`).
   - SocialBooster send is disabled; Brand kit and Account pages are placeholders.
   - The installer is unsigned, so Windows SmartScreen warns "unknown publisher".

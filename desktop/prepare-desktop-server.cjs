@@ -21,6 +21,9 @@ copyFolder(path.join(projectRoot, ".next", "static"), path.join(standaloneDir, "
 copyFolder(path.join(projectRoot, "public"), path.join(standaloneDir, "public"));
 copyFolder(path.join(projectRoot, "assets", "fonts"), path.join(standaloneDir, "assets", "fonts"));
 
+// Starts server.js and shuts it down if the app window process disappears.
+fs.copyFileSync(path.join(__dirname, "local-server-launcher.cjs"), path.join(standaloneDir, "local-server-launcher.cjs"));
+
 // Safety net: never ship local test videos.
 fs.rmSync(path.join(standaloneDir, ".local-data"), { recursive: true, force: true });
 
