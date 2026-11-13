@@ -4,8 +4,8 @@ import type { TranscriptWord } from "@/lib/local-transcription/transcript-word-t
 import type { ReelStyleSettings } from "@/lib/reel-options/reel-style-options";
 import type { CaptionCue, ReelDraft } from "@/lib/reel-project-types";
 
-// Builds the reel draft from Claude's edit plan: its chosen moment, hooks, keywords and post caption.
-// Captions still come from the real transcript; Claude only decides what to keep and what to highlight.
+// Builds the reel draft from the AI edit plan: its chosen moment, hooks, keywords and post caption.
+// Captions still come from the real transcript; the AI only decides what to keep and what to highlight.
 
 const MIN_SEGMENT_SECONDS = 3;
 const LENGTH_TOLERANCE_SECONDS = 1.5; // Claude may land slightly past the target on a sentence end
@@ -41,7 +41,7 @@ export function buildDraftFromEditPlan(
   };
 }
 
-/** Keeps Claude's segment inside the video and the target length, snapped to real word times. */
+/** Keeps the AI's segment inside the video and the target length, snapped to real word times. */
 function checkedSegment(words: TranscriptWord[], plan: EditPlan, targetSeconds: number, sourceSeconds: number) {
   const videoEnd = sourceSeconds > 0 ? sourceSeconds : Infinity;
   const firstWord = words.find((word) => word.startSeconds >= plan.segmentStartSeconds - 0.3);
@@ -64,7 +64,7 @@ function shiftWords(words: TranscriptWord[], start: number, end: number): Transc
     }));
 }
 
-/** Uses Claude's keyword if the caption line contains one, otherwise the simple rule. */
+/** Uses the AI's keyword if the caption line contains one, otherwise the simple rule. */
 function withPlanHighlight(cue: CaptionCue, keywords: string[]): CaptionCue {
   const lineWords = cue.text.split(" ").map((word) => word.replace(/[^\p{L}\p{N}]/gu, "").toLowerCase());
   const match = keywords.find((keyword) => lineWords.includes(keyword.replace(/[^\p{L}\p{N}]/gu, "").toLowerCase()));

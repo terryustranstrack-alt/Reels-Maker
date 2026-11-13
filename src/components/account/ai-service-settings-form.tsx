@@ -50,7 +50,7 @@ export function AiServiceSettingsForm() {
     <form onSubmit={saveAndTest} className="mt-6 max-w-xl rounded-2xl border border-line bg-surface p-5">
       <h2 className="font-semibold">AI service</h2>
       <p className="mt-1 text-sm text-ink-muted">
-        Claude writes your hooks, picks the best moment and writes the post caption. Videos stay on this PC; only the
+        AI writes your hooks, picks the best moment and writes the post caption. Videos stay on this PC; only the
         transcript text is sent.
       </p>
 
@@ -94,6 +94,6 @@ export function AiServiceSettingsForm() {
 
 function resultMessage(result: SaveResult): { text: string; good: boolean } {
   if (!result.ok) return { text: result.error, good: false };
-  if (!result.aiReady) return { text: "Connected, but the service has no Claude key yet.", good: false };
+  if (!result.aiReady) return { text: "Connected, but the service has no AI key yet.", good: false };
   return { text: "Connected. New reels will use AI hooks.", good: true };
 }

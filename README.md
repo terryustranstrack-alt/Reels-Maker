@@ -41,14 +41,15 @@ npm run desktop:start
 - The reel ends at a sentence end near the chosen length.
 - **Render MP4** makes a real 1080×1920, 30 fps MP4 on the PC with FFmpeg: 9:16 centre crop, trimmed to the reel length, hook and captions burned in.
 
-- **Claude AI edit plan** (when the AI service is set up on the Account page): 3 hooks, the strongest moment trimmed to your chosen length, keywords to highlight, post caption and hashtags. Only the transcript text is sent online; the video stays on the PC.
+- **AI edit plan** (Groq free tier by default, or Claude; set up on the Account page): 3 hooks, the strongest moment trimmed to your chosen length, keywords to highlight, post caption and hashtags. Only the transcript text is sent online; the video stays on the PC.
 - Without the AI service, simple rules are used instead and the Review screen says so.
 **Not built yet:** silence and filler cutting, face tracking, B-roll, music, zooms, credits, sign-in.
 
 ## Online AI service (Vercel)
 
 The same project, deployed to Vercel, acts as the AI service. On Vercel only `/api/cloud/*` is reachable (see `src/proxy.ts`).
-It needs two environment variables: `ANTHROPIC_API_KEY` and `RACIK_ALPHA_ACCESS_CODE` (the code the app sends with every request).
+Environment variables: `RACIK_ALPHA_ACCESS_CODE` (the code the app sends with every request), `GROQ_API_KEY` (default AI, free tier).
+To use Claude instead: `RACIK_AI_PROVIDER=claude` and `ANTHROPIC_API_KEY`.
 
 ## Folders
 
@@ -58,7 +59,7 @@ It needs two environment variables: `ANTHROPIC_API_KEY` and `RACIK_ALPHA_ACCESS_
 | `src/components/` | Screen pieces, grouped by screen |
 | `src/lib/local-files/`, `src/lib/local-render/` | Saving videos to disk; FFmpeg rendering and caption subtitles |
 | `src/lib/local-transcription/`, `src/lib/local-generation/` | Whisper speech-to-text; building the draft from the transcript |
-| `src/lib/cloud-ai/`, `src/app/api/cloud/` | Online AI service: Claude edit plan, access-code check |
+| `src/lib/cloud-ai/`, `src/app/api/cloud/` | Online AI service: edit plan from Groq or Claude, access-code check |
 | `src/lib/local-ai/` | App side of the AI step: saved service settings, calling the service |
 | `src/lib/demo-store/` | Project list and credits stored in the app (until the online service exists) |
 | `desktop/` | Windows app window (Electron), installer settings, Whisper download and check scripts |

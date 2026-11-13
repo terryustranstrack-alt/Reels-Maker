@@ -93,7 +93,7 @@ async function runGeneration(input: StartGenerationInput, job: RunningJob) {
   }
 }
 
-/** Step 1: speech to text on this PC. Steps 2–4: Claude's edit plan (online), or simple rules as a fallback. */
+/** Step 1: speech to text on this PC. Steps 2–4: the AI edit plan (online), or simple rules as a fallback. */
 async function buildDraft(input: StartGenerationInput, job: RunningJob, workDir: string): Promise<ReelDraft> {
   const tools = findWhisperTools();
   if (!tools) {
@@ -108,7 +108,7 @@ async function buildDraft(input: StartGenerationInput, job: RunningJob, workDir:
   return aiDraft ?? buildDraftFromTranscript(transcript.words, input.style, input.sourceDurationSeconds);
 }
 
-/** Asks Claude for the edit plan. Returns null (and notes why) when AI isn't available. */
+/** Asks the online AI for the edit plan. Returns null (and notes why) when AI isn't available. */
 async function tryAiDraft(words: TranscriptWord[], input: StartGenerationInput, job: RunningJob): Promise<ReelDraft | null> {
   const settings = await readAiServiceSettings();
   if (!settings) {

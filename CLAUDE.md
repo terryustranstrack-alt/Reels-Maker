@@ -77,7 +77,7 @@ Update the "Project status" section below: what was done, what's pending, and an
   - `src/lib/local-files/`, `src/lib/local-render/` — disk storage, FFmpeg render, caption subtitles
   - `src/lib/local-transcription/`, `src/lib/local-generation/` — Whisper speech-to-text, building the draft
   - `vendor/` — Whisper program + model (downloaded, not in git)
-  - `src/lib/cloud-ai/`, `src/app/api/cloud/` — online AI service (Vercel): Claude edit plan, access code
+  - `src/lib/cloud-ai/`, `src/app/api/cloud/` — online AI service (Vercel): edit plan from Groq (default, free) or Claude, access code
   - `src/lib/local-ai/` — app side: AI settings (Account page) and calling the service
   - `src/proxy.ts` — on Vercel, hides everything except `/api/cloud/*`
   - `src/lib/demo-store/` — project list and credits kept in the app (to move online later)
@@ -100,18 +100,18 @@ Update the "Project status" section below: what was done, what's pending, and an
   - **Real transcription**: Whisper ("small" model) runs on the PC and turns the video's speech into captions with real timings. "Making your reel" shows real progress; failures show a message and refund the credit.
   - Owner tested on Windows: install works (after a Retry in the installer), speech recognition works.
   - Fixed: the hidden local server now always stops with the app, even after a crash (it blocked reinstalling).
-  - **Claude AI edit plan (internal alpha)**: online service on Vercel (`/api/cloud/edit-plan`, protected by an access code) returns 3 hooks, the best moment (reel starts there), highlight keywords, post caption and hashtags. Set up on the app's Account page. Falls back to simple rules with a note on Review. Tested with a stand-in service; real Claude not yet called.
+  - **AI edit plan (internal alpha)**: Groq free tier by default (`openai/gpt-oss-120b`), Claude switchable with `RACIK_AI_PROVIDER=claude`. Online service on Vercel (`/api/cloud/edit-plan`, protected by an access code) returns 3 hooks, the best moment (reel starts there), highlight keywords, post caption and hashtags. Set up on the app's Account page. Falls back to simple rules with a note on Review. Tested with a stand-in service; real Groq/Claude not yet called (blocked from the dev environment).
   - The installer build downloads the newest whisper.cpp Windows release (only whisper-cli.exe + DLLs) and checks it transcribes a sample before building. First passing build: 22-word English sample in 9.1 s; installer ~360 MB.
 - **Pending / switched off:**
   - The online AI service isn't deployed yet (owner to create the Vercel project + keys).
-  - AI model: Claude Opus 5.5 at medium effort (about Rp 1,000–1,500 per reel); can switch to Sonnet 5.5 to save cost.
+  - Groq free tier: about 1,000 requests a day; its data policy should be checked before using client videos. For client work, Claude Haiku 5.5 is ~Rp 30/reel (switch provider + would need a model setting).
   - B-roll keywords from the AI are not used yet (no stock footage step).
   - Not built: silence/filler cutting, face tracking, B-roll, music, zooms, credits, sign-in.
   - Project list and credits live in the app's local storage (`src/lib/demo-store`).
   - SocialBooster send is disabled; Brand kit and Account pages are placeholders.
   - The installer is unsigned, so Windows SmartScreen warns "unknown publisher".
 - **Needs action from me:**
-  - Create an Anthropic API key, deploy this repo on Vercel with `ANTHROPIC_API_KEY` + `RACIK_ALPHA_ACCESS_CODE`, then enter the Vercel address + code on the app's Account page.
+  - Create a Groq API key, deploy this repo on Vercel with `GROQ_API_KEY` + `RACIK_ALPHA_ACCESS_CODE`, then enter the Vercel address + code on the app's Account page.
   - Download the new installer (about 360 MB now, includes Whisper) and try it with a real Bahasa talking video.
   - Before public launch: buy a code-signing certificate.
   - For the online part: create a Supabase project and an Anthropic API key (names in `.env.example`).
