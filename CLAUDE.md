@@ -65,18 +65,19 @@ Update the "Project status" section below: what was done, what's pending, and an
 <!-- Fill this in for each app -->
 
 - **App name:** Racik Reels (working name)
-- **What it does (1–2 sentences):** Turns one uploaded talking video into a ready-to-post 9:16 reel in one click — hook, animated captions, B-roll, effects, music and render.
+- **What it does (1–2 sentences):** Turns one uploaded talking video into a ready-to-post 9:16 reel in one click — hook, animated captions, B-roll, effects, music and render. Ships as a **Windows app** that renders on the user's PC, plus a small online service for sign-in, credits and AI (see `context/decision-hybrid-windows-app.md`).
 - **Who uses it:** Indonesian UMKM owners, corporate marketing/HR teams, agencies and creators (see `context/prd-racik-reels-1-click-ai-reels-maker.md`).
-- **Stack:** Next.js 16 (App Router) + Tailwind 4 · Supabase · Cloudflare R2 · Vercel · GitHub · render worker (separate container, planned)
+- **Stack:** Next.js 16 (App Router) + Tailwind 4 inside an Electron Windows app · FFmpeg (ffmpeg-static) for local rendering · planned online part: Supabase + Claude API · GitHub Actions builds the installer
 - **Repo:** terryustranstrack-alt/Reels-Maker
-- **Live URL:** not deployed yet
+- **Live URL:** none (desktop app). Installer: GitHub → Actions → "Build Windows installer" → Artifacts
 - **Important folders:**
-  - `context/` — PRD and UI/UX mockup (read first)
-  - `src/app/` — pages, one folder per screen
-  - `src/components/` — screen pieces grouped by screen (`upload`, `style`, `generating`, `review`, `export`, `projects`, `layout`, `ui`)
-  - `src/lib/reel-options/` — style presets, upload limits, pipeline steps, music list
-  - `src/lib/demo-store/` — browser-only demo data store (to be replaced by Supabase)
-  - `supabase/migrations/` — database changes
+  - `context/` — PRD, UI/UX mockup, decisions (read first)
+  - `src/app/` — pages, one folder per screen; `src/app/api/local/` — save videos and render on the PC
+  - `src/components/` — screen pieces grouped by screen
+  - `src/lib/local-files/`, `src/lib/local-render/` — disk storage, FFmpeg render, caption subtitles
+  - `src/lib/demo-store/` — project list and credits kept in the app (to move online later)
+  - `desktop/` — Electron window and installer settings
+  - `supabase/migrations/` — database changes for the online part
 
 ## Project status
 
@@ -84,13 +85,19 @@ Update the "Project status" section below: what was done, what's pending, and an
 
 - **Last updated:** 2026-11-13
 - **Recently done:**
-  - Set up the Next.js app with the mockup's dark theme (Poppins, mint accent).
-  - Built all mockup screens, working end to end in **demo mode**: Create/Upload (type, 500 MB and 3-min checks), Pick a style, Making your reel (live steps), Review (phone tabs + desktop editor with timeline), Export, Projects library.
-  - Review edits work: choose/write hook, cold-open toggle, fix caption text, remove B-roll or switch layout, music, effects, change caption style (2 free changes).
-  - Wrote the first database migration (`0001_initial_reels_schema.sql`) — not applied yet.
+  - Built all mockup screens (upload, style, generating, review on phone and desktop, export, projects) with the mockup's dark theme.
+  - Decided on the hybrid Windows app (`context/decision-hybrid-windows-app.md`).
+  - Videos are saved on the PC's disk; the preview survives restarts.
+  - **Render MP4 works for real**: FFmpeg on the PC makes a 1080×1920, 30 fps MP4 with 9:16 centre crop, the hook and captions burned in.
+  - Electron Windows app wrapper, plus a GitHub Actions workflow that builds the `.exe` installer.
+  - Tested the packaged app end to end on Linux, including a real render.
 - **Pending / switched off:**
-  - Demo mode only: data lives in the browser, generation is simulated with sample content.
-  - Not built yet: sign-in, real upload to R2, render worker (transcription, Claude edit plan, FFmpeg render), Download MP4, SocialBooster send, billing, brand kit, notifications.
+  - The Windows installer build itself has not been confirmed yet. Check the first GitHub Actions run.
+  - Still simulated: transcription, AI hooks and captions (fixed sample content), B-roll, music, zooms, face tracking, credits, sign-in.
+  - Project list and credits live in the app's local storage (`src/lib/demo-store`).
+  - SocialBooster send is disabled; Brand kit and Account pages are placeholders.
+  - The installer is unsigned, so Windows SmartScreen warns "unknown publisher".
 - **Needs action from me:**
-  - Create a Supabase project and a Cloudflare R2 bucket when ready for the real backend; env var names are in `.env.example`.
-  - Decide speech-to-text vendor (Whisper vs Deepgram) and where the render worker runs (Modal / Railway / VPS).
+  - Download the installer from GitHub Actions and try it on a Windows PC.
+  - Before public launch: buy a code-signing certificate.
+  - For the online part: create a Supabase project and an Anthropic API key (names in `.env.example`).

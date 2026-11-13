@@ -1,0 +1,43 @@
+# Builds the Racik Reels Windows installer (.exe) on a Windows machine at GitHub.
+# Download it from the run's "Artifacts" section on the Actions tab.
+name: Build Windows installer
+
+on:
+  workflow_dispatch: # "Run workflow" button on the Actions tab
+  push:
+    branches: [main, "claude/**"]
+    paths:
+      - "src/**"
+      - "desktop/**"
+      - "assets/**"
+      - "package.json"
+      - "package-lock.json"
+      - "next.config.ts"
+      - ".github/workflows/build-windows-installer.yml"
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # Also downloads the Windows version of FFmpeg (ffmpeg-static).
+      - run: npm ci
+
+      - run: npm run lint
+
+      - name: Build installer
+        run: npm run desktop:build-windows -- --publish never
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: "false" # no code-signing certificate yet
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Racik-Reels-Windows-Installer
+          path: dist-desktop/*.exe
+          retention-days: 14

@@ -62,11 +62,11 @@ function MobileBottomNav({ pathname }: { pathname: string }) {
   );
 }
 
-/** Reminds testers that data lives only in this browser until Supabase is connected. */
+/** Reminds testers that AI generation is still simulated. */
 function DemoModeBadge() {
   return (
     <span
-      title="Demo mode: projects are saved in this browser only and generation is simulated."
+      title="Demo mode: AI generation is simulated with sample content. Rendering is real."
       className="hidden rounded-full border border-warn/40 px-2.5 py-1 text-xs text-warn sm:inline"
     >
       Demo

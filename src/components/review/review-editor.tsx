@@ -15,7 +15,7 @@ import { StyleEditPanel } from "@/components/review/edit-panels/style-edit-panel
 import { ReelPreviewPlayer } from "@/components/review/reel-preview-player";
 import { ReviewTimeline } from "@/components/review/review-timeline";
 import {
-  getSourceVideoUrl,
+  sourceVideoUrl as findSourceVideoUrl,
   updateDraft,
   useDemoProject,
   useDemoState,
@@ -61,7 +61,7 @@ function ReviewEditorLayout({ project, draft }: { project: ReelProject; draft: R
   const [activeTab, setActiveTab] = useState<EditTab>("hook");
   const [currentTime, setCurrentTime] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [sourceVideoUrl] = useState(() => getSourceVideoUrl(project.id));
+  const sourceVideoUrl = findSourceVideoUrl(project);
   const isDesktop = useIsDesktop();
 
   const handleDraftChange: DraftChange = useCallback((change) => updateDraft(project.id, change), [project.id]);
@@ -202,11 +202,11 @@ function DesktopTopBar({ project, exportHref, onRegenerate }: { project: ReelPro
   );
 }
 
-/** The original video only stays in memory in the tab it was uploaded in (until cloud storage is connected). */
+/** Older demo reels were made before videos were saved to disk. */
 function SourceVideoNote() {
   return (
     <p className="mt-2 text-center text-xs text-ink-muted">
-      Preview without video: the original file is only kept in the tab it was uploaded in.
+      Preview without video: the original file for this reel wasn&apos;t saved.
     </p>
   );
 }

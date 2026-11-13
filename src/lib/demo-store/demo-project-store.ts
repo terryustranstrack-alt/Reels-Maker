@@ -1,8 +1,8 @@
 "use client";
 
-// Demo-mode data store. Keeps projects and credits in the browser (localStorage)
-// so the whole flow can be clicked through before Supabase and the render worker are connected.
-// Every function here has a matching server version planned (see supabase/migrations).
+// Demo-mode data store. Keeps the project list and credits in the app's local storage.
+// Videos themselves are saved on the PC's disk (see src/app/api/local).
+// Sign-in, credits and AI move to the online service later (see supabase/migrations).
 
 import { useEffect, useSyncExternalStore } from "react";
 import { buildDemoDraft } from "@/lib/demo-store/demo-draft-builder";
@@ -91,12 +91,11 @@ export function useGenerationTicker() {
   }, []);
 }
 
-// ---------- Uploaded video held in memory ----------
+// ---------- Video chosen on the Create screen, waiting for "Generate" ----------
 
-export type PendingUpload = { fileName: string; durationSeconds: number; objectUrl: string };
+export type PendingUpload = { fileName: string; durationSeconds: number; sourceVideoId: string };
 
 let pendingUpload: PendingUpload | null = null;
-const sourceVideoUrls = new Map<string, string>(); // projectId → browser object URL
 
 export function setPendingUpload(upload: PendingUpload) {
   pendingUpload = upload;
@@ -106,9 +105,9 @@ export function getPendingUpload(): PendingUpload | null {
   return pendingUpload;
 }
 
-/** The original video for preview. Only available in the same browser tab it was uploaded in. */
-export function getSourceVideoUrl(projectId: string): string | null {
-  return sourceVideoUrls.get(projectId) ?? null;
+/** Address of the original video saved on this PC, for the preview player. */
+export function sourceVideoUrl(project: ReelProject): string | null {
+  return project.sourceVideoId ? `/api/local/source-videos/${project.sourceVideoId}` : null;
 }
 
 // ---------- Actions ----------
@@ -129,6 +128,8 @@ export function startGeneration(upload: PendingUpload, style: ReelStyleSettings)
     title: titleFromFileName(upload.fileName),
     sourceFileName: upload.fileName,
     sourceDurationSeconds: upload.durationSeconds,
+    sourceVideoId: upload.sourceVideoId,
+    renderedReelId: null,
     createdAt: Date.now(),
     status: "processing",
     style,
@@ -138,7 +139,6 @@ export function startGeneration(upload: PendingUpload, style: ReelStyleSettings)
     draft: null,
   };
 
-  sourceVideoUrls.set(projectId, upload.objectUrl);
   pendingUpload = null;
   setState({ credits: state.credits - cost, projects: [project, ...state.projects] });
   return { ok: true, projectId };
@@ -179,7 +179,10 @@ export function demoProgressPercent(project: ReelProject, now: number): number {
 }
 
 export function updateDraft(projectId: string, change: (draft: ReelDraft) => ReelDraft) {
-  updateProject(projectId, (project) => (project.draft ? { ...project, draft: change(project.draft) } : project));
+  // Any edit makes an earlier rendered MP4 out of date.
+  updateProject(projectId, (project) =>
+    project.draft ? { ...project, draft: change(project.draft), renderedReelId: null } : project,
+  );
 }
 
 type RegenerateResult = { ok: true } | { ok: false; error: string };
@@ -195,6 +198,7 @@ export function regenerateWithStyle(projectId: string, captionStyle: CaptionStyl
     ...item,
     style: { ...item.style, captionStyle },
     regenerationsUsed: item.regenerationsUsed + 1,
+    renderedReelId: null,
   }));
   return { ok: true };
 }
@@ -203,8 +207,9 @@ export function freeRegenerationsLeft(project: ReelProject): number {
   return Math.max(0, FREE_REGENERATIONS_PER_REEL - project.regenerationsUsed);
 }
 
-export function markExported(projectId: string) {
-  updateProject(projectId, (project) => ({ ...project, status: "exported" }));
+/** Saves the finished MP4 and marks the reel Exported. */
+export function saveRenderedReel(projectId: string, renderedReelId: string) {
+  updateProject(projectId, (project) => ({ ...project, renderedReelId, status: "exported" }));
 }
 
 // ---------- Helpers ----------

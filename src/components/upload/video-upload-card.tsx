@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { UploadIcon } from "@/components/ui/app-icons";
 import { setPendingUpload } from "@/lib/demo-store/demo-project-store";
+import { saveVideoToDisk } from "@/lib/local-files/save-video-to-disk";
 import {
   ALLOWED_VIDEO_EXTENSIONS,
   MAX_VIDEO_SECONDS,
@@ -12,13 +13,12 @@ import {
 } from "@/lib/reel-options/upload-rules";
 
 // Big dashed upload box on the Create screen (PRD F1).
-// Checks type, size and length in the browser, then moves on to "Pick a style".
+// Checks type, size and length, saves the video on this PC, then moves on to "Pick a style".
 export function VideoUploadCard() {
   const router = useRouter();
   const galleryInputRef = useRef<HTMLInputElement>(null);
-  const cameraInputRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
-  const [isChecking, setIsChecking] = useState(false);
+  const [busyLabel, setBusyLabel] = useState<string | null>(null); // e.g. "Saving video… 40%"
   const [isDragging, setIsDragging] = useState(false);
 
   async function handleFile(file: File | undefined) {
@@ -28,22 +28,22 @@ export function VideoUploadCard() {
     const basicError = checkVideoFileBasics(file);
     if (basicError) return setError(basicError);
 
-    setIsChecking(true);
+    setBusyLabel("Checking video…");
     const objectUrl = URL.createObjectURL(file);
     try {
       const durationSeconds = await readVideoDurationSeconds(objectUrl);
       if (durationSeconds > MAX_VIDEO_SECONDS + 0.5) {
-        URL.revokeObjectURL(objectUrl);
         setError("This video is longer than 3 minutes.");
         return;
       }
-      setPendingUpload({ fileName: file.name, durationSeconds, objectUrl });
+      const sourceVideoId = await saveVideoToDisk(file, (percent) => setBusyLabel(`Saving video… ${percent}%`));
+      setPendingUpload({ fileName: file.name, durationSeconds, sourceVideoId });
       router.push("/create/style");
-    } catch (readError) {
-      URL.revokeObjectURL(objectUrl);
-      setError(readError instanceof Error ? readError.message : "We couldn't read this video.");
+    } catch (uploadError) {
+      setError(uploadError instanceof Error ? uploadError.message : "We couldn't read this video.");
     } finally {
-      setIsChecking(false);
+      URL.revokeObjectURL(objectUrl);
+      setBusyLabel(null);
     }
   }
 
@@ -75,20 +75,13 @@ export function VideoUploadCard() {
 
       <button
         type="button"
-        disabled={isChecking}
+        disabled={busyLabel !== null}
         onClick={() => galleryInputRef.current?.click()}
         className="mt-6 w-full rounded-xl bg-brand py-3.5 text-base font-semibold text-canvas disabled:opacity-60"
       >
-        {isChecking ? "Checking video…" : "Choose from gallery"}
+        {busyLabel ?? "Choose video file"}
       </button>
-      <button
-        type="button"
-        onClick={() => cameraInputRef.current?.click()}
-        className="mt-4 text-sm text-ink-soft underline underline-offset-4"
-      >
-        Record new video
-      </button>
-      <p className="mt-3 hidden text-xs text-ink-muted md:block">or drag and drop a file here</p>
+      <p className="mt-3 text-xs text-ink-muted">or drag and drop a video here</p>
 
       {error && (
         <p role="alert" className="mt-4 text-sm text-warn">
@@ -100,15 +93,6 @@ export function VideoUploadCard() {
         ref={galleryInputRef}
         type="file"
         accept={acceptList}
-        className="hidden"
-        onChange={(event) => handleFile(event.target.files?.[0])}
-      />
-      {/* `capture` opens the phone camera directly */}
-      <input
-        ref={cameraInputRef}
-        type="file"
-        accept="video/*"
-        capture="user"
         className="hidden"
         onChange={(event) => handleFile(event.target.files?.[0])}
       />

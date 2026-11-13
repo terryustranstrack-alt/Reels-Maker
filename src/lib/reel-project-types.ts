@@ -46,6 +46,8 @@ export type ReelProject = {
   title: string;
   sourceFileName: string;
   sourceDurationSeconds: number;
+  sourceVideoId: string | null; // original video saved on this PC (see /api/local/source-videos)
+  renderedReelId: string | null; // final MP4 on this PC; cleared when the draft is edited
   createdAt: number;
   status: ReelProjectStatus;
   style: ReelStyleSettings;
