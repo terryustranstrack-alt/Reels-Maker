@@ -8,15 +8,29 @@ const path = require("node:path");
 const { Readable } = require("node:stream");
 const { pipeline } = require("node:stream/promises");
 
-const WHISPER_VERSION = "v1.9.5";
 const MODEL_FILE = "ggml-small-q5_1.bin"; // must match src/lib/local-transcription/find-whisper-tools.ts
-const PROGRAM_ZIP_URL = `https://github.com/ggml-org/whisper.cpp/releases/download/${WHISPER_VERSION}/whisper-bin-x64.zip`;
+const PROGRAM_ZIP_NAME = "whisper-bin-x64.zip"; // official Windows (CPU) build
+const RELEASES_API = "https://api.github.com/repos/ggml-org/whisper.cpp/releases?per_page=30";
 const MODEL_URL = `https://huggingface.co/ggerganov/whisper.cpp/resolve/main/${MODEL_FILE}`;
 
 const vendorDir = path.join(__dirname, "..", "vendor");
 const programDir = path.join(vendorDir, "whisper");
 const modelDir = path.join(vendorDir, "whisper-models");
 const tempDir = path.join(vendorDir, "tmp");
+
+/** Not every whisper.cpp release includes the Windows program, so use the newest one that does. */
+async function findWindowsProgramZipUrl() {
+  const response = await fetch(RELEASES_API, { headers: { Accept: "application/vnd.github+json" } });
+  if (!response.ok) throw new Error(`Couldn't list whisper.cpp releases (${response.status})`);
+  for (const release of await response.json()) {
+    const asset = (release.assets ?? []).find((item) => item.name === PROGRAM_ZIP_NAME);
+    if (!release.draft && !release.prerelease && asset) {
+      console.log(`Using whisper.cpp ${release.tag_name}`);
+      return asset.browser_download_url;
+    }
+  }
+  throw new Error(`No whisper.cpp release has ${PROGRAM_ZIP_NAME}.`);
+}
 
 async function downloadFile(url, targetPath) {
   console.log(`Downloading ${url}`);
@@ -38,7 +52,7 @@ async function ensureWindowsProgram() {
   if (fs.existsSync(path.join(programDir, "whisper-cli.exe"))) return console.log("Whisper program already downloaded.");
   const zipPath = path.join(tempDir, "whisper-bin-x64.zip");
   const extractDir = path.join(tempDir, "whisper-extract");
-  await downloadFile(PROGRAM_ZIP_URL, zipPath);
+  await downloadFile(await findWindowsProgramZipUrl(), zipPath);
   fs.mkdirSync(extractDir, { recursive: true });
   execFileSync("tar", ["-xf", zipPath, "-C", extractDir]); // Windows 10+ tar can open zip files
 
