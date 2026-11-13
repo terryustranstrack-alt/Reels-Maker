@@ -36,6 +36,10 @@ win:
       arch: [x64]
 
 nsis:
+  # Unzip straight into the install folder. The default (7z + copy step) failed on Windows with a
+  # misleading "Racik Reels cannot be closed" error; this path also shows the real reason if a file is blocked.
+  useZip: true
+  differentialPackage: false
   oneClick: false
   allowToChangeInstallationDirectory: true
   createDesktopShortcut: true
