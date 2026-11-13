@@ -7,6 +7,7 @@ import path from "node:path";
 import { RENDERED_REELS_DIR, RENDER_WORK_DIR, SOURCE_VIDEOS_DIR, ensureDataFolders } from "@/lib/local-files/local-data-paths";
 import { buildReelSubtitles } from "@/lib/local-render/build-reel-subtitles";
 import { findCaptionFontsDir, findFfmpegBinary } from "@/lib/local-render/find-ffmpeg-binary";
+import { countAudioTracks, reelAudioArgs } from "@/lib/local-render/video-audio-tracks";
 import type { CaptionStyleId } from "@/lib/reel-options/reel-style-options";
 import type { ReelDraft } from "@/lib/reel-project-types";
 
@@ -21,14 +22,19 @@ export async function renderReelVideo({ sourceVideoId, draft, captionStyle }: Re
   const renderId = `${randomUUID()}.mp4`;
   const workDir = path.join(RENDER_WORK_DIR, renderId.replace(".mp4", ""));
 
+  const sourcePath = path.join(SOURCE_VIDEOS_DIR, sourceVideoId);
+
   try {
     await prepareWorkFolder(workDir, buildReelSubtitles(draft, captionStyle));
+    const audioArgs = reelAudioArgs(await countAudioTracks(sourcePath)); // mixes all sound tracks
     await runFfmpeg(workDir, [
       "-y",
       // Start at the moment the AI picked (0 if none); placed before -i for a fast, exact seek.
       "-ss", String(draft.sourceStartSeconds ?? 0),
-      "-i", path.join(SOURCE_VIDEOS_DIR, sourceVideoId),
+      "-i", sourcePath,
       "-t", String(draft.durationSeconds),
+      "-map", "0:v:0",
+      ...audioArgs,
       // Fill the 9:16 frame, crop the middle, then burn in the subtitles.
       // Relative file names avoid Windows "C:\" escaping problems inside the filter.
       "-vf", "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,fps=30,ass=subtitles.ass:fontsdir=fonts",

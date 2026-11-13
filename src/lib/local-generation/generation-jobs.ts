@@ -14,7 +14,7 @@ import { requestEditPlan } from "@/lib/local-ai/request-edit-plan";
 import { buildDraftFromEditPlan } from "@/lib/local-generation/build-draft-from-edit-plan";
 import { buildDraftFromTranscript } from "@/lib/local-generation/build-draft-from-transcript";
 import { toTimedSentences } from "@/lib/local-generation/timed-sentences";
-import type { TranscriptWord } from "@/lib/local-transcription/transcript-word-types";
+import type { Transcript, TranscriptWord } from "@/lib/local-transcription/transcript-word-types";
 import { findWhisperTools } from "@/lib/local-transcription/find-whisper-tools";
 import { transcribeVideoSpeech } from "@/lib/local-transcription/transcribe-video-speech";
 import { GENERATION_PIPELINE_STEPS } from "@/lib/reel-options/generation-pipeline-steps";
@@ -30,7 +30,8 @@ export type GenerationJob = {
   currentStepShare: number; // rough progress (0–1) of the current step
   draft: ReelDraft | null;
   usedSampleContent: boolean; // true when Whisper isn't installed and sample captions were used
-  aiNote: string | null; // why Claude's edit plan wasn't used, if it wasn't
+  aiNote: string | null; // why the AI edit plan wasn't used, if it wasn't
+  speechNote: string | null; // warning when the video has no or very little speech
   errorMessage: string | null;
 };
 
@@ -56,6 +57,7 @@ export function startGenerationJob(input: StartGenerationInput) {
     draft: null,
     usedSampleContent: false,
     aiNote: null,
+    speechNote: null,
     errorMessage: null,
     transcribeStartedAt: Date.now(),
     // Whisper "small" on an average laptop: roughly as long as the video itself.
@@ -103,6 +105,8 @@ async function buildDraft(input: StartGenerationInput, job: RunningJob, workDir:
   const videoPath = path.join(SOURCE_VIDEOS_DIR, input.sourceVideoId);
   const transcript = await transcribeVideoSpeech(tools, videoPath, input.style.language, workDir);
   job.completedSteps = 1;
+  job.speechNote = littleSpeechNote(transcript, input.sourceDurationSeconds);
+  await saveTranscriptCopy(input.projectId, transcript);
 
   const aiDraft = await tryAiDraft(transcript.words, input, job);
   return aiDraft ?? buildDraftFromTranscript(transcript.words, input.style, input.sourceDurationSeconds);
@@ -149,9 +153,25 @@ async function finishJob(projectId: string, job: RunningJob, outcome: { failed?:
 
 // ---------- Helpers ----------
 
+/** A warning when Whisper found no or very little speech (e.g. silent video, speech on a muted track). */
+function littleSpeechNote(transcript: Transcript, videoSeconds: number): string | null {
+  if (transcript.audioTrackCount === 0) return "This video has no sound, so there are no captions.";
+  const expectedMinimumWords = Math.max(5, videoSeconds / 12); // normal talk is ~2 words a second
+  if (transcript.words.length < expectedMinimumWords) {
+    return "We heard very little speech in this video. Check that it has clear spoken sound.";
+  }
+  return null;
+}
+
+/** Keeps what Whisper heard next to the result, so a bad transcription can be checked later. */
+async function saveTranscriptCopy(projectId: string, transcript: Transcript) {
+  const filePath = path.join(GENERATION_RESULTS_DIR, `${projectId}.transcript.json`);
+  await writeFile(filePath, JSON.stringify(transcript, null, 1), "utf8").catch(() => {});
+}
+
 function publicJobState(job: RunningJob): GenerationJob {
-  const { status, completedSteps, currentStepShare, draft, usedSampleContent, aiNote, errorMessage } = job;
-  return { status, completedSteps, currentStepShare, draft, usedSampleContent, aiNote, errorMessage };
+  const { status, completedSteps, currentStepShare, draft, usedSampleContent, aiNote, speechNote, errorMessage } = job;
+  return { status, completedSteps, currentStepShare, draft, usedSampleContent, aiNote, speechNote, errorMessage };
 }
 
 /** Guessed progress through transcription, so the progress ring keeps moving (never reaches 100%). */

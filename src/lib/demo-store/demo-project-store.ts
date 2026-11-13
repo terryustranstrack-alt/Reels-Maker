@@ -168,8 +168,8 @@ function applyGenerationStatus(projectId: string, status: GenerationStatus) {
       currentStepShare: status.currentStepShare,
     }));
   } else if (status.status === "done" && status.draft) {
-    const { draft, usedSampleContent, aiNote } = status;
-    updateProject(projectId, (project) => ({ ...project, status: "ready", draft, usedSampleContent, aiNote }));
+    const { draft, usedSampleContent, aiNote, speechNote } = status;
+    updateProject(projectId, (project) => ({ ...project, status: "ready", draft, usedSampleContent, aiNote, speechNote }));
   } else {
     const message =
       status.status === "failed"

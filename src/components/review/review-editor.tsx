@@ -98,6 +98,7 @@ function ReviewEditorLayout({ project, draft }: { project: ReelProject; draft: R
         {preview}
         {!sourceVideoUrl && <SourceVideoNote />}
         {project.usedSampleContent && <SampleContentNote />}
+        {project.speechNote && <SpeechNote message={project.speechNote} />}
         {project.aiNote && <AiNote message={project.aiNote} />}
         <div className="mt-6 flex overflow-x-auto border-b border-line [scrollbar-width:none]">
           {EDIT_TABS.map((tab) => (
@@ -141,6 +142,7 @@ function ReviewEditorLayout({ project, draft }: { project: ReelProject; draft: R
             {preview}
             {!sourceVideoUrl && <SourceVideoNote />}
             {project.usedSampleContent && <SampleContentNote />}
+            {project.speechNote && <SpeechNote message={project.speechNote} />}
             {project.aiNote && <AiNote message={project.aiNote} />}
             <ReviewTimeline draft={draft} currentTime={currentTime} onSeek={seekTo} />
           </section>
@@ -227,4 +229,9 @@ function SampleContentNote() {
 /** Explains why the hooks came from simple rules instead of the AI (not set up, or the service failed). */
 function AiNote({ message }: { message: string }) {
   return <p className="mt-2 text-center text-xs text-ink-muted">{message}</p>;
+}
+
+/** Warns that the video had no or very little speech, so captions and AI hooks will be thin. */
+function SpeechNote({ message }: { message: string }) {
+  return <p className="mt-2 text-center text-xs text-warn">{message}</p>;
 }

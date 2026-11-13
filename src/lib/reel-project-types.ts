@@ -61,7 +61,8 @@ export type ReelProject = {
   currentStepShare?: number;
   failureMessage?: string | null;
   usedSampleContent?: boolean; // Whisper not installed → sample captions were used
-  aiNote?: string | null; // why Claude's edit plan wasn't used (not set up / failed), shown on Review
+  aiNote?: string | null; // why the AI edit plan wasn't used (not set up / failed), shown on Review
+  speechNote?: string | null; // no or very little speech heard, shown on Review
 };
 
 /** The hook text currently shown in the first 3 seconds. */

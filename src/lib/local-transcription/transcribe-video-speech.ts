@@ -5,6 +5,7 @@ import { cpus } from "node:os";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { findFfmpegBinary } from "@/lib/local-render/find-ffmpeg-binary";
+import { countAudioTracks, speechAudioArgs } from "@/lib/local-render/video-audio-tracks";
 import type { WhisperTools } from "@/lib/local-transcription/find-whisper-tools";
 import { parseWhisperJson } from "@/lib/local-transcription/parse-whisper-json";
 import type { Transcript } from "@/lib/local-transcription/transcript-word-types";
@@ -18,15 +19,22 @@ export async function transcribeVideoSpeech(
   language: ReelLanguage,
   workDir: string,
 ): Promise<Transcript> {
+  const audioTrackCount = await countAudioTracks(videoPath);
+  const audioArgs = speechAudioArgs(audioTrackCount);
+  if (!audioArgs) return { language, words: [], audioTrackCount }; // video has no sound
+
   const audioPath = path.join(workDir, "speech.wav");
-  await extractSpeechAudio(videoPath, audioPath);
+  await extractSpeechAudio(videoPath, audioArgs, audioPath);
   await runWhisper(tools, audioPath, language, path.join(workDir, "transcript"));
-  return parseWhisperJson(await readFile(path.join(workDir, "transcript.json"), "utf8"));
+  const transcript = parseWhisperJson(await readFile(path.join(workDir, "transcript.json"), "utf8"));
+  return { ...transcript, audioTrackCount };
 }
 
-/** Whisper needs 16 kHz mono WAV audio. */
-function extractSpeechAudio(videoPath: string, audioPath: string): Promise<void> {
-  return runProgram(findFfmpegBinary(), ["-y", "-i", videoPath, "-vn", "-ac", "1", "-ar", "16000", "-c:a", "pcm_s16le", audioPath]);
+/** Whisper needs 16 kHz mono WAV audio; all sound tracks are mixed in and quiet speech is raised. */
+function extractSpeechAudio(videoPath: string, audioArgs: string[], audioPath: string): Promise<void> {
+  return runProgram(findFfmpegBinary(), [
+    "-y", "-i", videoPath, "-vn", ...audioArgs, "-ac", "1", "-ar", "16000", "-c:a", "pcm_s16le", audioPath,
+  ]);
 }
 
 /** One word per line (-ml 1 -sow), JSON output (-oj) to `<outputBase>.json`. */

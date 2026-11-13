@@ -56,7 +56,8 @@ export function chooseReelLength(words: TranscriptWord[], targetSeconds: number,
   const limit = Math.min(targetSeconds, videoEnd);
   const lastSpoken = words.at(-1)?.endSeconds ?? 0;
 
-  if (words.length === 0) return roundTenth(Math.max(MIN_REEL_SECONDS, limit));
+  // Little or no speech: use the chosen length rather than a tiny reel around one or two words.
+  if (words.length < 5) return roundTenth(Math.max(MIN_REEL_SECONDS, limit));
   if (lastSpoken <= limit) return roundTenth(Math.max(MIN_REEL_SECONDS, Math.min(videoEnd, lastSpoken + 0.5)));
 
   const fitting = words.filter((word) => word.endSeconds <= limit);
